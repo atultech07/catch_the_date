@@ -1,0 +1,1279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Mission: Catch The Date!</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Baloo+2:wght@600;700;800&display=swap');
+
+  :root{
+    --sky: #EAD9C9;
+    --sky-deep: #D9BFA6;
+    --sun: #E8B84B;
+    --coral: #C97B63;
+    --mint: #9CAE8C;
+    --ink: #2E2A26;
+    --card: #FFFDF8;
+    --purple: #8C7A6B;
+    --rose: #D98E8E;
+  }
+
+  *{box-sizing:border-box; margin:0; padding:0;}
+
+  html,body{
+    min-height:100%;
+    font-family:'Fredoka', sans-serif;
+    color:var(--ink);
+    overflow-x:hidden;
+  }
+
+  body{
+    background:
+      radial-gradient(circle at 15% 10%, rgba(255,255,255,0.5) 0%, transparent 40%),
+      radial-gradient(circle at 85% 25%, rgba(217,142,142,0.15) 0%, transparent 45%),
+      linear-gradient(180deg, var(--sky) 0%, var(--sky-deep) 55%, #C9A98A 100%);
+    background-size: 100% 100%, 100% 100%, 100% 200%;
+    animation: bgshift 14s ease-in-out infinite alternate;
+    min-height:100vh;
+    position:relative;
+    padding-bottom:60px;
+  }
+  @keyframes bgshift{
+    0%{ background-position: 0 0, 0 0, 0 0%; }
+    100%{ background-position: 0 0, 0 0, 0 100%; }
+  }
+
+  .sparkle{
+    position:absolute;
+    width:22px; height:22px;
+    opacity:0.5;
+    animation: twinkle 3.6s ease-in-out infinite;
+    pointer-events:none;
+    z-index:1;
+  }
+  .sparkle svg{ width:100%; height:100%; fill:var(--sun); }
+  @keyframes twinkle{
+    0%,100%{ opacity:0.25; transform:scale(0.8) rotate(0deg); }
+    50%{ opacity:0.65; transform:scale(1.15) rotate(20deg); }
+  }
+
+  .bloom{
+    position:absolute;
+    width:70px; height:70px;
+    opacity:0.5;
+    pointer-events:none;
+    z-index:1;
+    animation: sway 6s ease-in-out infinite;
+  }
+  .bloom svg{ width:100%; height:100%; }
+  @keyframes sway{
+    0%,100%{ transform:rotate(-4deg) translateY(0); }
+    50%{ transform:rotate(4deg) translateY(-6px); }
+  }
+
+  .cloud{
+    position:absolute;
+    background:#fff;
+    border-radius:50px;
+    opacity:0.85;
+  }
+  .cloud::before, .cloud::after{
+    content:'';
+    position:absolute;
+    background:#fff;
+    border-radius:50%;
+  }
+  .c1{ width:120px; height:40px; top:8%; left:6%; }
+  .c1::before{ width:60px; height:60px; top:-30px; left:15px; }
+  .c1::after{ width:40px; height:40px; top:-20px; left:65px; }
+  .c2{ width:90px; height:32px; top:16%; right:10%; }
+  .c2::before{ width:46px; height:46px; top:-22px; left:10px; }
+  .c2::after{ width:34px; height:34px; top:-16px; left:52px; }
+
+  /* score bar fixed top */
+  .scorebar{
+    position:fixed;
+    top:0; left:0; right:0;
+    z-index:80;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:10px 18px;
+    background:rgba(46,42,38,0.88);
+    backdrop-filter: blur(4px);
+    color:#fff;
+    font-family:'Baloo 2', sans-serif;
+    font-weight:700;
+    font-size:0.95rem;
+  }
+  .scorebar .stagepos{ opacity:0.85; font-size:0.85rem; }
+  .scorebar .scoreval{ color:var(--sun); }
+
+  header{
+    text-align:center;
+    padding: 70px 20px 10px;
+    position:relative;
+    z-index:2;
+  }
+
+  .badge{
+    display:inline-block;
+    background:var(--coral);
+    color:#fff;
+    font-family:'Baloo 2', sans-serif;
+    font-weight:700;
+    font-size:0.78rem;
+    letter-spacing:0.14em;
+    padding:8px 20px;
+    border-radius:30px;
+    box-shadow: 0 4px 14px rgba(201,123,99,0.35);
+    margin-bottom:22px;
+  }
+
+  h1{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:800;
+    font-size: clamp(2rem, 7vw, 3.6rem);
+    color:var(--ink);
+    text-shadow: 0 2px 0 rgba(255,255,255,0.4);
+    line-height:1.1;
+    letter-spacing:-0.01em;
+  }
+  h1 span{ color:var(--coral); }
+
+  .sub{
+    max-width:520px;
+    margin: 16px auto 0;
+    font-size:1.1rem;
+    color:#5a4f42;
+    font-weight:600;
+    text-shadow: none;
+  }
+
+  .chase-wrap{
+    max-width:900px;
+    margin: 24px auto 6px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    padding:0 16px;
+  }
+  .chase-scene{
+    position:relative;
+    height:88px;
+    overflow:hidden;
+    background: rgba(255,255,255,0.10);
+    border-radius:16px;
+  }
+  .ground{
+    position:absolute;
+    bottom:6px; left:0; right:0;
+    height:4px;
+    background: repeating-linear-gradient(90deg, rgba(255,255,255,0.5) 0 14px, transparent 14px 28px);
+  }
+  .runner{
+    position:absolute;
+    bottom:8px;
+    font-size:2.6rem;
+    animation: run 3.2s linear infinite;
+    filter: drop-shadow(0 6px 5px rgba(0,0,0,0.25));
+  }
+  .runner.prize{ animation-delay:-0.35s; }
+  @keyframes run{
+    0%{ transform: translateX(-10%) scaleX(1); }
+    49%{ transform: translateX(105%) scaleX(1); }
+    50%{ transform: translateX(105%) scaleX(-1); }
+    99%{ transform: translateX(-10%) scaleX(-1); }
+    100%{ transform: translateX(-10%) scaleX(1); }
+  }
+
+  /* Mission briefing */
+  .briefing{
+    max-width:560px;
+    margin: 22px auto;
+    background: var(--card);
+    border-radius:20px;
+    border:1px solid rgba(46,42,38,0.08);
+    box-shadow: 0 12px 30px rgba(46,42,38,0.12);
+    padding: 26px 24px;
+    position:relative;
+    z-index:2;
+  }
+  .briefing h3{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:800;
+    font-size:1.2rem;
+    margin-bottom:14px;
+    text-align:center;
+  }
+  .briefing ol{
+    list-style:none;
+    counter-reset: note;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .briefing li{
+    counter-increment: note;
+    display:flex;
+    gap:12px;
+    align-items:flex-start;
+    font-size:0.98rem;
+    line-height:1.4;
+  }
+  .briefing li::before{
+    content: counter(note);
+    flex:0 0 auto;
+    width:26px; height:26px;
+    border-radius:50%;
+    background:var(--purple);
+    color:#fff;
+    font-family:'Baloo 2', sans-serif;
+    font-weight:700;
+    font-size:0.9rem;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .briefing b{ color:var(--coral); }
+
+  /* stage cards */
+  .card{
+    max-width:560px;
+    margin: 20px auto;
+    background: var(--card);
+    border-radius:24px;
+    border:1px solid rgba(46,42,38,0.08);
+    box-shadow: 0 16px 40px rgba(46,42,38,0.14);
+    padding: 34px 26px;
+    position:relative;
+    z-index:2;
+    text-align:center;
+    display:none;
+  }
+  .card.active{ display:block; animation: pop 0.5s cubic-bezier(.2,1.6,.4,1); }
+  @keyframes pop{
+    0%{ transform:scale(0.5); opacity:0; }
+    70%{ transform:scale(1.05); opacity:1; }
+    100%{ transform:scale(1); }
+  }
+
+  .stage-label{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:700;
+    font-size:1rem;
+    color:var(--purple);
+    letter-spacing:0.05em;
+    margin-bottom:6px;
+  }
+  .game-title{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:800;
+    font-size:1.5rem;
+    margin-bottom:6px;
+  }
+  .game-desc{
+    font-size:1rem;
+    color:#5b4f70;
+    margin-bottom:22px;
+  }
+
+  /* Stage 1: catch heart */
+  .catch-zone{
+    position:relative;
+    height:180px;
+    background: linear-gradient(180deg, #E8F7FF, #D6F0E0);
+    border-radius:18px;
+    border:3px dashed var(--sky-deep);
+    overflow:hidden;
+    margin-bottom:18px;
+  }
+  #heart-btn{
+    position:absolute;
+    font-size:2.6rem;
+    background:none;
+    border:none;
+    cursor:pointer;
+    line-height:1;
+    transition: transform 0.15s ease;
+  }
+  #heart-btn:active{ transform:scale(0.85); }
+
+  .score-row{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:10px;
+    margin-bottom:6px;
+    font-family:'Baloo 2', sans-serif;
+    font-weight:700;
+  }
+  .pip{
+    width:22px; height:22px;
+    border-radius:50%;
+    border:3px solid var(--ink);
+    background:#fff;
+    transition: background 0.2s ease, transform 0.2s ease;
+  }
+  .pip.filled{ background:var(--coral); transform:scale(1.1); }
+
+  /* Stage 2: memory match */
+  .memory-grid{
+    display:grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap:10px;
+    max-width:400px;
+    margin: 0 auto 16px;
+  }
+  .mcard{
+    aspect-ratio: 1;
+    background:var(--purple);
+    border-radius:12px;
+    border:none;
+    box-shadow: 0 4px 12px rgba(46,42,38,0.18);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:1.8rem;
+    cursor:pointer;
+    user-select:none;
+    transition: transform 0.25s ease, background 0.25s ease;
+  }
+  .mcard.flipped{ background:#fff; transform: rotateY(0); }
+  .mcard.matched{ background:var(--mint); opacity:0.7; cursor:default; }
+  .mcard .face{ display:none; }
+  .mcard.flipped .face, .mcard.matched .face{ display:block; }
+  .mcard.flipped .back, .mcard.matched .back{ display:none; }
+  .mcard .back{ display:block; color:#fff; font-family:'Baloo 2'; font-weight:800; }
+
+  .moves-label{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:700;
+    color:#5b4f70;
+    margin-bottom:6px;
+  }
+
+  /* Stage 3: trivia */
+  .options{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    max-width:360px;
+    margin: 0 auto 10px;
+  }
+  .opt-btn{
+    font-family:'Fredoka', sans-serif;
+    font-weight:600;
+    font-size:1rem;
+    padding:14px 18px;
+    border-radius:14px;
+    border:1px solid rgba(46,42,38,0.12);
+    box-shadow: 0 3px 10px rgba(46,42,38,0.08);
+    background:#fff;
+    cursor:pointer;
+    transition: transform 0.15s ease, background 0.15s ease;
+  }
+  .opt-btn:hover{ transform: translateY(-2px); background:#f6f1ea; }
+  .opt-btn.correct{ background:var(--mint); }
+  .opt-btn.wrong{ background:#ffb3a7; }
+  .feedback{
+    font-size:0.9rem;
+    color:#5b4f70;
+    min-height:22px;
+    margin-top:8px;
+  }
+
+  /* Stage 4: reflex */
+  .reflex-box{
+    height:170px;
+    border-radius:18px;
+    border:none;
+    box-shadow: 0 8px 20px rgba(46,42,38,0.18);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'Baloo 2', sans-serif;
+    font-weight:800;
+    font-size:1.3rem;
+    color:#fff;
+    cursor:pointer;
+    margin-bottom:14px;
+    background:#c9756a;
+    transition: background 0.15s ease;
+    user-select:none;
+  }
+  .reflex-box.go{ background:#7a9c6c; }
+  .reflex-box.wait{ background:#c9756a; }
+  .reflex-result{
+    font-size:0.95rem;
+    color:#5b4f70;
+    min-height:22px;
+  }
+
+  .next-btn{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:700;
+    background:var(--coral);
+    color:#fff;
+    border:none;
+    border-radius:14px;
+    padding:12px 26px;
+    cursor:pointer;
+    box-shadow: 0 6px 16px rgba(201,123,99,0.4);
+    margin-top:10px;
+    display:none;
+  }
+  .next-btn.show{ display:inline-block; }
+  .next-btn:active{ transform:translateY(2px); }
+
+  .hint{
+    font-size:0.85rem;
+    color:#7a6f8e;
+    font-style:italic;
+  }
+
+  /* reveal */
+  .reveal{
+    max-width:560px;
+    margin: 20px auto 0;
+    background: var(--card);
+    border-radius:24px;
+    border:1px solid rgba(46,42,38,0.08);
+    box-shadow: 0 16px 40px rgba(46,42,38,0.14);
+    padding: 36px 26px;
+    text-align:center;
+    position:relative;
+    z-index:2;
+    display:none;
+  }
+  .reveal.show{ display:block; animation: pop 0.6s cubic-bezier(.2,1.6,.4,1); }
+
+  .stamp{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:800;
+    display:inline-block;
+    background:var(--mint);
+    color:var(--ink);
+    padding:8px 22px;
+    border-radius:12px;
+    border:none;
+    box-shadow: 0 4px 12px rgba(156,174,140,0.4);
+    margin-bottom:18px;
+    font-size:1.1rem;
+  }
+  .reveal h2{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:800;
+    font-size: clamp(1.5rem, 5vw, 2.2rem);
+    margin-bottom:14px;
+    line-height:1.2;
+  }
+  .date-pill{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    background:var(--sun);
+    border:none;
+    box-shadow: 0 4px 14px rgba(232,184,75,0.4);
+    border-radius:16px;
+    padding:10px 22px;
+    font-family:'Baloo 2', sans-serif;
+    font-weight:700;
+    font-size:1.15rem;
+    margin: 10px 0 10px;
+  }
+  .only-note{
+    font-size:0.85rem;
+    color:#8a5a00;
+    background:#fbf1d8;
+    border:1px solid #e8d5a3;
+    border-radius:10px;
+    padding:8px 12px;
+    margin-bottom:22px;
+    display:inline-block;
+  }
+
+  .buttons{
+    position:relative;
+    display:flex;
+    gap:20px;
+    justify-content:center;
+    align-items:center;
+    flex-wrap:wrap;
+    min-height:110px;
+  }
+  button.choice{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:700;
+    cursor:pointer;
+    border-radius:16px;
+    text-transform:uppercase;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  #yes{
+    background: linear-gradient(180deg, #E0987F, var(--coral) 60%, #B96650);
+    color:#fff;
+    border:none;
+    padding: 16px 34px;
+    font-size:1.1rem;
+    box-shadow: 0 8px 22px rgba(201,123,99,0.45);
+  }
+  #yes:hover{ transform: translateY(-2px) scale(1.06); box-shadow: 0 10px 28px rgba(201,123,99,0.6); }
+  #no{
+    background:#fff;
+    color:var(--ink);
+    border:1px solid rgba(46,42,38,0.15);
+    padding: 14px 28px;
+    font-size:1rem;
+    box-shadow: 0 4px 12px rgba(46,42,38,0.1);
+  }
+  .no-caption{
+    font-size:0.85rem;
+    color:#6b5f83;
+    font-style:italic;
+    margin-top:10px;
+  }
+
+  /* finale */
+  .finale{
+    position:fixed;
+    inset:0;
+    z-index:100;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    background: linear-gradient(180deg, var(--sky), var(--purple) 120%);
+    flex-direction:column;
+    padding:24px;
+    overflow-y:auto;
+  }
+  .finale.show{ display:flex; }
+  .finale-emoji{ font-size:4rem; margin-bottom:10px; animation: bounce 1s ease infinite; }
+  @keyframes bounce{ 0%,100%{transform:translateY(0);} 50%{transform:translateY(-16px);} }
+  .finale-title{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:800;
+    font-size: clamp(1.8rem, 7vw, 3.2rem);
+    color:#fff;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.25);
+    margin-bottom:10px;
+  }
+  .final-score-card{
+    background:#fff;
+    border-radius:20px;
+    border:none;
+    box-shadow: 0 16px 36px rgba(0,0,0,0.25);
+    padding:18px 30px;
+    margin:16px 0;
+    font-family:'Baloo 2', sans-serif;
+  }
+  .final-score-card .label{ font-size:0.85rem; color:#7a6f8e; }
+  .final-score-card .value{ font-size:2.4rem; font-weight:800; color:var(--coral); }
+  .screenshot-note{
+    background:rgba(255,255,255,0.15);
+    border:1px solid rgba(255,255,255,0.5);
+    border-radius:12px;
+    padding:12px 18px;
+    color:#fff;
+    font-weight:600;
+    max-width:420px;
+    font-size:0.95rem;
+    margin-top:6px;
+  }
+  .finale-sub{
+    font-size: clamp(1rem, 2.4vw, 1.2rem);
+    color:#fff;
+    max-width:480px;
+    font-weight:600;
+    margin-bottom:8px;
+  }
+
+  /* countdown */
+  .countdown-label{
+    color:#fff;
+    font-family:'Baloo 2', sans-serif;
+    font-weight:700;
+    font-size:0.85rem;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    opacity:0.9;
+    margin-top:18px;
+    margin-bottom:10px;
+  }
+  .countdown{
+    display:flex;
+    gap:10px;
+    margin-bottom:20px;
+  }
+  .countdown .unit{
+    background:#fff;
+    border-radius:14px;
+    padding:12px 14px;
+    min-width:64px;
+    box-shadow: 0 10px 24px rgba(0,0,0,0.2);
+  }
+  .countdown .unit .num{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:800;
+    font-size:1.6rem;
+    color:var(--coral);
+    line-height:1;
+  }
+  .countdown .unit .lbl{
+    font-size:0.68rem;
+    letter-spacing:0.08em;
+    color:#8a7f70;
+    text-transform:uppercase;
+    margin-top:4px;
+  }
+
+  /* rule card */
+  .rule-card{
+    background:#fff;
+    border-radius:20px;
+    box-shadow: 0 16px 36px rgba(0,0,0,0.2);
+    padding:22px 24px;
+    max-width:440px;
+    margin: 6px 0 20px;
+    text-align:left;
+    display:flex;
+    gap:16px;
+    align-items:flex-start;
+  }
+  .rule-icon{
+    flex:0 0 auto;
+    width:56px; height:56px;
+  }
+  .rule-icon svg{ width:100%; height:100%; }
+  .rule-text .rule-title{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:800;
+    font-size:1.02rem;
+    color:var(--ink);
+    margin-bottom:6px;
+  }
+  .rule-text p{
+    font-size:0.92rem;
+    color:#5b4f70;
+    line-height:1.5;
+  }
+  .rule-text .fine-print{
+    font-size:0.78rem;
+    color:#a09484;
+    font-style:italic;
+    margin-top:6px;
+  }
+
+  @keyframes shake-no{
+    0%, 100%{ transform: rotate(0deg); }
+    20%{ transform: rotate(-8deg); }
+    40%{ transform: rotate(8deg); }
+    60%{ transform: rotate(-6deg); }
+    80%{ transform: rotate(6deg); }
+  }
+  .rule-icon svg{ animation: shake-no 2.2s ease-in-out infinite; transform-origin: 50% 80%; }
+
+  /* photo gallery: real images, not emoji */
+  .gallery-label{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:700;
+    font-size:0.95rem;
+    color:var(--purple);
+    margin: 4px 0 4px;
+  }
+  .gallery-hint{
+    font-size:0.8rem;
+    color:#8a7f70;
+    font-style:italic;
+    margin-bottom:14px;
+  }
+  .photo-gallery{
+    display:flex;
+    gap:14px;
+    justify-content:center;
+    flex-wrap:wrap;
+    margin-bottom:22px;
+    cursor:default;
+  }
+  .photo-card{
+    cursor:default;
+    background:#fff;
+    padding:8px 8px 14px;
+    border-radius:10px;
+    box-shadow: 0 10px 24px rgba(46,42,38,0.18);
+    width:120px;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+  }
+  .photo-card:nth-child(1){ transform: rotate(-4deg); }
+  .photo-card:nth-child(2){ transform: rotate(2deg); }
+  .photo-card:nth-child(3){ transform: rotate(-2deg); }
+  .photo-card:hover{ transform: translateY(-6px) rotate(0deg) scale(1.05); box-shadow: 0 16px 32px rgba(46,42,38,0.26); }
+  .photo-card img, .photo-card .gallery-svg{
+    width:100%;
+    height:96px;
+    object-fit:cover;
+    border-radius:6px;
+    display:block;
+  }
+  .photo-card .caption{
+    font-family:'Fredoka', sans-serif;
+    font-size:0.78rem;
+    color:#6b5f52;
+    text-align:center;
+    margin-top:8px;
+  }
+
+  .confetti{
+    position:fixed;
+    top:-20px;
+    z-index:99;
+    border-radius:2px;
+    pointer-events:none;
+  }
+  @keyframes fall{
+    to{ transform: translateY(110vh) rotate(720deg); opacity:0.9; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.01s !important; transition-duration:0.01s !important; }
+  }
+
+  /* ---------- MOBILE ---------- */
+  @media (max-width: 600px){
+    .scorebar{ padding:8px 12px; font-size:0.82rem; }
+    header{ padding: 62px 14px 6px; }
+    .badge{ font-size:0.7rem; padding:6px 14px; }
+    .sub{ font-size:0.95rem; }
+
+    .chase-wrap{ padding:0 10px; gap:6px; }
+    .chase-scene{ height:70px; border-radius:12px; }
+    .runner{ font-size:1.9rem; }
+
+    .briefing, .card, .reveal{
+      max-width: 94vw;
+      padding: 22px 18px;
+      border-radius:20px;
+      margin: 16px auto;
+    }
+    .briefing li{ font-size:0.9rem; }
+
+    .catch-zone{ height:160px; }
+    #heart-btn{ font-size:2.2rem; }
+
+    .memory-grid{ max-width:320px; gap:8px; }
+    .mcard{ font-size:1.4rem; border-radius:10px; }
+
+    .options{ max-width:100%; }
+    .opt-btn{ font-size:0.92rem; padding:12px 14px; }
+
+    .reflex-box{ height:150px; font-size:1.1rem; }
+
+    .buttons{ gap:14px; }
+    #yes{ padding:14px 26px; font-size:1rem; }
+    #no{ padding:12px 22px; font-size:0.92rem; }
+
+    .final-score-card{ padding:14px 22px; }
+    .final-score-card .value{ font-size:2rem; }
+    .screenshot-note{ font-size:0.85rem; padding:10px 14px; }
+
+    .countdown{ gap:6px; }
+    .countdown .unit{ min-width:52px; padding:9px 8px; }
+    .countdown .unit .num{ font-size:1.25rem; }
+    .rule-card{ flex-direction:column; align-items:center; text-align:center; padding:18px; }
+    .rule-icon{ width:46px; height:46px; }
+
+    h1{ -webkit-text-stroke: 1.5px var(--ink); }
+  }
+
+  @media (max-width: 380px){
+    .memory-grid{ grid-template-columns: repeat(4, 1fr); gap:6px; }
+    .mcard{ font-size:1.2rem; }
+    h1{ font-size: clamp(1.7rem, 8vw, 2.4rem); }
+  }
+</style>
+</head>
+<body>
+
+  <div class="scorebar">
+    <div class="stagepos" id="stagepos">Stage 1 / 4</div>
+    <div>SCORE: <span class="scoreval" id="scoreval">0</span></div>
+  </div>
+
+  <div class="cloud c1"></div>
+  <div class="cloud c2"></div>
+  <div class="sparkle" style="top:20%; left:7%; animation-delay:0s;"><svg viewBox="0 0 24 24"><path d="M12 0 L14.5 9.5 L24 12 L14.5 14.5 L12 24 L9.5 14.5 L0 12 L9.5 9.5 Z"/></svg></div>
+  <div class="sparkle" style="top:32%; right:9%; animation-delay:0.9s; width:16px; height:16px;"><svg viewBox="0 0 24 24"><path d="M12 0 L14.5 9.5 L24 12 L14.5 14.5 L12 24 L9.5 14.5 L0 12 L9.5 9.5 Z"/></svg></div>
+  <div class="sparkle" style="top:62%; left:5%; animation-delay:1.7s;"><svg viewBox="0 0 24 24"><path d="M12 0 L14.5 9.5 L24 12 L14.5 14.5 L12 24 L9.5 14.5 L0 12 L9.5 9.5 Z"/></svg></div>
+  <div class="sparkle" style="top:75%; right:7%; animation-delay:2.3s; width:18px; height:18px;"><svg viewBox="0 0 24 24"><path d="M12 0 L14.5 9.5 L24 12 L14.5 14.5 L12 24 L9.5 14.5 L0 12 L9.5 9.5 Z"/></svg></div>
+
+  <div class="bloom" style="top:10%; left:2%;">
+    <svg viewBox="0 0 60 60"><g fill="var(--rose)" opacity="0.85">
+      <ellipse cx="30" cy="14" rx="9" ry="13"/><ellipse cx="30" cy="46" rx="9" ry="13"/>
+      <ellipse cx="14" cy="30" rx="13" ry="9"/><ellipse cx="46" cy="30" rx="13" ry="9"/>
+    </g><circle cx="30" cy="30" r="7" fill="var(--sun)"/></svg>
+  </div>
+  <div class="bloom" style="top:8%; right:3%; width:56px; height:56px; animation-delay:1s;">
+    <svg viewBox="0 0 60 60"><g fill="var(--mint)" opacity="0.8">
+      <ellipse cx="30" cy="14" rx="8" ry="12"/><ellipse cx="30" cy="46" rx="8" ry="12"/>
+      <ellipse cx="14" cy="30" rx="12" ry="8"/><ellipse cx="46" cy="30" rx="12" ry="8"/>
+    </g><circle cx="30" cy="30" r="6" fill="var(--sun)"/></svg>
+  </div>
+  <div class="bloom" style="bottom:12%; left:4%; width:50px; height:50px; animation-delay:2s;">
+    <svg viewBox="0 0 60 60"><g fill="var(--coral)" opacity="0.75">
+      <ellipse cx="30" cy="14" rx="8" ry="12"/><ellipse cx="30" cy="46" rx="8" ry="12"/>
+      <ellipse cx="14" cy="30" rx="12" ry="8"/><ellipse cx="46" cy="30" rx="12" ry="8"/>
+    </g><circle cx="30" cy="30" r="6" fill="var(--sun)"/></svg>
+  </div>
+
+  <header>
+    <div class="badge">SPECIAL MISSION</div>
+    <h1>Operation: Catch <span>The Date</span></h1>
+    <p class="sub">Four stages. One heart. One question at the very end. Good luck, agent.</p>
+  </header>
+
+  <div class="chase-wrap">
+    <div class="chase-scene row1">
+      <div class="ground"></div>
+      <div class="runner chaser">🐱</div>
+      <div class="runner prize">🐭</div>
+    </div>
+  </div>
+
+  <div class="briefing">
+    <h3>📋 Mission Briefing</h3>
+    <ol>
+      <li><span>There's only <b>one date slot</b> open this month — choose wisely when it's revealed.</span></li>
+      <li><span><b>Complete this puzzle first</b> — all 4 stages — before the real question unlocks.</span></li>
+      <li><span>When you're done, <b>send a screenshot of your final score screen</b> as proof of completion.</span></li>
+    </ol>
+  </div>
+
+  <!-- STAGE 1: Catch the heart -->
+  <div class="card active" id="stage1">
+    <div class="stage-label">STAGE 1 OF 4</div>
+    <div class="game-title">Catch the heart 5 times!</div>
+    <div class="game-desc">It's quick. It's slippery. Tap it before it escapes.</div>
+    <div class="catch-zone" id="catchZone">
+      <button id="heart-btn">💗</button>
+    </div>
+    <div class="score-row">
+      <div class="pip" id="pip1"></div>
+      <div class="pip" id="pip2"></div>
+      <div class="pip" id="pip3"></div>
+      <div class="pip" id="pip4"></div>
+      <div class="pip" id="pip5"></div>
+    </div>
+    <div class="hint">Caught: <span id="caughtCount">0</span> / 5</div>
+  </div>
+
+  <!-- STAGE 2: Memory match -->
+  <div class="card" id="stage2">
+    <div class="stage-label">STAGE 2 OF 4</div>
+    <div class="game-title">Match the pairs</div>
+    <div class="game-desc">Flip two cards at a time. Find all 4 matching pairs.</div>
+    <div class="moves-label">Moves: <span id="movesCount">0</span></div>
+    <div class="memory-grid" id="memoryGrid"></div>
+    <div class="hint">Fewer moves = higher score</div>
+  </div>
+
+  <!-- STAGE 3: Trivia -->
+  <div class="card" id="stage3">
+    <div class="stage-label">STAGE 3 OF 4</div>
+    <div class="game-title">Quick question</div>
+    <div class="game-desc">How many date slots are open on the calendar this month?</div>
+    <div class="options">
+      <button class="opt-btn" data-correct="false">Five, take your pick</button>
+      <button class="opt-btn" data-correct="true">Just one — and it's precious</button>
+      <button class="opt-btn" data-correct="false">Unlimited, obviously</button>
+    </div>
+    <div class="feedback" id="triviaFeedback"></div>
+  </div>
+
+  <!-- STAGE 4: Reflex -->
+  <div class="card" id="stage4">
+    <div class="stage-label">STAGE 4 OF 4</div>
+    <div class="game-title">Reflex check</div>
+    <div class="game-desc">Wait for the box to turn green, then tap it as fast as you can.</div>
+    <div class="reflex-box wait" id="reflexBox">WAIT FOR IT...</div>
+    <div class="reflex-result" id="reflexResult"></div>
+    <button class="next-btn" id="toRevealBtn">Unlock The Question →</button>
+  </div>
+
+  <!-- REVEAL -->
+  <div class="reveal" id="reveal">
+    <div class="stamp">MISSION COMPLETE ✅</div>
+    <h2>All stages cleared. Now for the real question...</h2>
+    <div class="date-pill">📅 Saturday, July 24 — save it?</div>
+    <div class="only-note">⚠️ Remember: this is the only date slot open this month.</div>
+
+    <div class="gallery-label">🎁 What's waiting for you</div>
+    <p class="gallery-hint">(just a preview — all three, not pick-one 😌)</p>
+    <div class="photo-gallery">
+      <div class="photo-card">
+        <svg viewBox="0 0 100 84" class="gallery-svg">
+          <rect width="100" height="84" rx="6" fill="#F6EFE4"/>
+          <path d="M50 74 L50 40" stroke="#7A8F63" stroke-width="3" stroke-linecap="round"/>
+          <path d="M50 58 Q38 54 36 44" stroke="#7A8F63" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <path d="M50 64 Q62 60 64 50" stroke="#7A8F63" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <g transform="translate(50 30)">
+            <ellipse cx="0" cy="-9" rx="7" ry="10" fill="var(--rose)"/><ellipse cx="0" cy="9" rx="7" ry="10" fill="var(--rose)"/>
+            <ellipse cx="-9" cy="0" rx="10" ry="7" fill="var(--rose)"/><ellipse cx="9" cy="0" rx="10" ry="7" fill="var(--rose)"/>
+            <circle cx="0" cy="0" r="5.5" fill="var(--sun)"/>
+          </g>
+          <g transform="translate(28 40)">
+            <ellipse cx="0" cy="-6" rx="5" ry="7" fill="var(--coral)"/><ellipse cx="0" cy="6" rx="5" ry="7" fill="var(--coral)"/>
+            <ellipse cx="-6" cy="0" rx="7" ry="5" fill="var(--coral)"/><ellipse cx="6" cy="0" rx="7" ry="5" fill="var(--coral)"/>
+            <circle cx="0" cy="0" r="4" fill="var(--sun)"/>
+          </g>
+          <g transform="translate(72 46)">
+            <ellipse cx="0" cy="-6" rx="5" ry="7" fill="var(--mint)"/><ellipse cx="0" cy="6" rx="5" ry="7" fill="var(--mint)"/>
+            <ellipse cx="-6" cy="0" rx="7" ry="5" fill="var(--mint)"/><ellipse cx="6" cy="0" rx="7" ry="5" fill="var(--mint)"/>
+            <circle cx="0" cy="0" r="4" fill="var(--sun)"/>
+          </g>
+          <path d="M42 68 L58 68 L54 78 L46 78 Z" fill="var(--coral)"/>
+        </svg>
+        <div class="caption">Flowers</div>
+      </div>
+      <div class="photo-card">
+        <svg viewBox="0 0 100 84" class="gallery-svg">
+          <rect width="100" height="84" rx="6" fill="#F6EFE4"/>
+          <g transform="translate(50 44)">
+            <path d="M0 -18 L0 20 Q-22 14 -32 20 L-32 -12 Q-22 -20 0 -18 Z" fill="var(--coral)"/>
+            <path d="M0 -18 L0 20 Q22 14 32 20 L32 -12 Q22 -20 0 -18 Z" fill="var(--purple)"/>
+            <line x1="-24" y1="-6" x2="-6" y2="-4" stroke="#fff" stroke-width="1.6" opacity="0.7"/>
+            <line x1="-24" y1="2" x2="-6" y2="4" stroke="#fff" stroke-width="1.6" opacity="0.7"/>
+            <line x1="24" y1="-6" x2="6" y2="-4" stroke="#fff" stroke-width="1.6" opacity="0.7"/>
+            <line x1="24" y1="2" x2="6" y2="4" stroke="#fff" stroke-width="1.6" opacity="0.7"/>
+          </g>
+        </svg>
+        <div class="caption">A book</div>
+      </div>
+      <div class="photo-card">
+        <svg viewBox="0 0 100 84" class="gallery-svg">
+          <rect width="100" height="84" rx="6" fill="#F6EFE4"/>
+          <rect x="26" y="34" width="48" height="38" rx="4" fill="var(--sun)"/>
+          <rect x="26" y="34" width="48" height="10" fill="#D9A030"/>
+          <rect x="46" y="34" width="8" height="38" fill="var(--coral)"/>
+          <path d="M50 34 Q38 20 28 28 Q28 36 42 34 Z" fill="var(--coral)"/>
+          <path d="M50 34 Q62 20 72 28 Q72 36 58 34 Z" fill="var(--coral)"/>
+        </svg>
+        <div class="caption">A gift</div>
+      </div>
+    </div>
+
+    <div class="buttons">
+      <button class="choice" id="yes">Yes, it's a date!</button>
+      <button class="choice" id="no">No</button>
+    </div>
+    <div class="no-caption">(fair warning: "no" gets nervous and runs)</div>
+  </div>
+
+  <div class="finale" id="finale">
+    <div class="finale-emoji">🎉</div>
+    <div class="finale-title">JULY 24, LOCKED IN!</div>
+    <p class="finale-sub">Mission accomplished, agent. One last thing...</p>
+    <div class="final-score-card">
+      <div class="label">FINAL SCORE</div>
+      <div class="value" id="finalScoreVal">0</div>
+    </div>
+
+    <div class="countdown-label">⏳ Countdown to date night</div>
+    <div class="countdown">
+      <div class="unit"><div class="num" id="cdDays">00</div><div class="lbl">days</div></div>
+      <div class="unit"><div class="num" id="cdHours">00</div><div class="lbl">hrs</div></div>
+      <div class="unit"><div class="num" id="cdMins">00</div><div class="lbl">min</div></div>
+      <div class="unit"><div class="num" id="cdSecs">00</div><div class="lbl">sec</div></div>
+    </div>
+
+    <div class="rule-card">
+      <div class="rule-icon">
+        <svg viewBox="0 0 60 60">
+          <circle cx="30" cy="30" r="26" fill="#FFE3DD"/>
+          <g fill="none" stroke="#C97B63" stroke-width="4" stroke-linecap="round">
+            <path d="M18 22 Q30 12 42 22 Q42 34 30 40 Q18 34 18 22 Z" fill="#F3C89B" stroke="#B96650"/>
+          </g>
+          <line x1="14" y1="46" x2="46" y2="14" stroke="#C9756A" stroke-width="4.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="rule-text">
+        <div class="rule-title">🚨 Official Health Decree</div>
+        <p>No outside food, no street snacks, no "just one" junk run — <strong>nothing</strong> until this countdown hits zero. Home-cooked or nothing, agent. It's for your own good.</p>
+        <div class="fine-print">Signed, your very serious (but loving) future date.</div>
+      </div>
+    </div>
+
+    <div class="screenshot-note">📸 Don't forget — screenshot this score screen and send it over as proof you finished the mission!</div>
+  </div>
+
+<script>
+  let score = 0;
+  const scoreValEl = document.getElementById('scoreval');
+  const stageposEl = document.getElementById('stagepos');
+  function addScore(n){
+    score += n;
+    scoreValEl.textContent = score;
+  }
+  function setStagePos(n){ stageposEl.textContent = `Stage ${n} / 4`; }
+
+  function goToStage(id, num){
+    document.querySelectorAll('.card').forEach(c=>c.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    setStagePos(num);
+    document.getElementById(id).scrollIntoView({behavior:'smooth', block:'center'});
+  }
+
+  /* ---------- STAGE 1: catch heart ---------- */
+  const heartBtn = document.getElementById('heart-btn');
+  const zone = document.getElementById('catchZone');
+  const pips1 = [1,2,3,4,5].map(i=>document.getElementById('pip'+i));
+  const caughtCountEl = document.getElementById('caughtCount');
+  let caught = 0;
+  let moveTimer = null;
+
+  function placeHeart(){
+    const zw = zone.clientWidth, zh = zone.clientHeight;
+    const bw = heartBtn.offsetWidth || 44, bh = heartBtn.offsetHeight || 44;
+    const x = Math.max(6, Math.random() * (zw - bw - 6));
+    const y = Math.max(6, Math.random() * (zh - bh - 6));
+    heartBtn.style.left = x + 'px';
+    heartBtn.style.top = y + 'px';
+  }
+  function scheduleFlee(){
+    clearTimeout(moveTimer);
+    moveTimer = setTimeout(placeHeart, 750 + Math.random()*500);
+  }
+  function dodgeAway(){ placeHeart(); scheduleFlee(); }
+  heartBtn.addEventListener('mouseenter', dodgeAway);
+  heartBtn.addEventListener('click', ()=>{
+    if(caught >= 5) return;
+    caught++;
+    pips1[caught-1].classList.add('filled');
+    caughtCountEl.textContent = caught;
+    heartBtn.textContent = ['💗','💖','💘'][caught % 3];
+    addScore(20);
+    if(caught >= 5){
+      clearTimeout(moveTimer);
+      heartBtn.disabled = true;
+      heartBtn.style.opacity = '0.5';
+      setTimeout(()=>{ initMemory(); goToStage('stage2', 2); }, 500);
+    } else {
+      placeHeart();
+      scheduleFlee();
+    }
+  });
+  window.addEventListener('load', ()=>{ placeHeart(); scheduleFlee(); });
+  window.addEventListener('resize', ()=>{ if(document.getElementById('stage1').classList.contains('active')) placeHeart(); });
+
+  /* ---------- STAGE 2: memory match ---------- */
+  const memoryGrid = document.getElementById('memoryGrid');
+  const movesCountEl = document.getElementById('movesCount');
+  const emojiSet = ['🐱','🐭','💗','🎬','⭐','🍿'].slice(0,4); // 4 pairs
+  let flipped = [];
+  let matchedCount = 0;
+  let moves = 0;
+  let lockBoard = false;
+
+  function initMemory(){
+    memoryGrid.innerHTML = '';
+    movesCountEl.textContent = '0';
+    matchedCount = 0; moves = 0; flipped = []; lockBoard = false;
+    let deck = [...emojiSet, ...emojiSet];
+    deck.sort(()=>Math.random()-0.5);
+    deck.forEach((emoji, i)=>{
+      const cardEl = document.createElement('div');
+      cardEl.className = 'mcard';
+      cardEl.dataset.emoji = emoji;
+      cardEl.innerHTML = `<span class="face">${emoji}</span><span class="back">?</span>`;
+      cardEl.addEventListener('click', ()=>flipCard(cardEl));
+      memoryGrid.appendChild(cardEl);
+    });
+  }
+
+  function flipCard(cardEl){
+    if(lockBoard) return;
+    if(cardEl.classList.contains('flipped') || cardEl.classList.contains('matched')) return;
+    cardEl.classList.add('flipped');
+    flipped.push(cardEl);
+    if(flipped.length === 2){
+      moves++;
+      movesCountEl.textContent = moves;
+      lockBoard = true;
+      const [a,b] = flipped;
+      if(a.dataset.emoji === b.dataset.emoji){
+        a.classList.add('matched');
+        b.classList.add('matched');
+        matchedCount++;
+        addScore(15);
+        flipped = [];
+        lockBoard = false;
+        if(matchedCount === emojiSet.length){
+          addScore(Math.max(0, 60 - moves*3));
+          setTimeout(()=>{ goToStage('stage3', 3); }, 500);
+        }
+      } else {
+        setTimeout(()=>{
+          a.classList.remove('flipped');
+          b.classList.remove('flipped');
+          flipped = [];
+          lockBoard = false;
+        }, 700);
+      }
+    }
+  }
+
+  /* ---------- STAGE 3: trivia ---------- */
+  const optBtns = document.querySelectorAll('.opt-btn');
+  const triviaFeedback = document.getElementById('triviaFeedback');
+  let triviaAnswered = false;
+  optBtns.forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      if(triviaAnswered) return;
+      const correct = btn.dataset.correct === 'true';
+      if(correct){
+        triviaAnswered = true;
+        btn.classList.add('correct');
+        triviaFeedback.textContent = "Correct! Only one slot. Make it count.";
+        addScore(30);
+        setTimeout(()=>{ goToStage('stage4', 4); }, 700);
+      } else {
+        btn.classList.add('wrong');
+        triviaFeedback.textContent = "Not quite — try again!";
+        setTimeout(()=>btn.classList.remove('wrong'), 500);
+      }
+    });
+  });
+
+  /* ---------- STAGE 4: reflex ---------- */
+  const reflexBox = document.getElementById('reflexBox');
+  const reflexResult = document.getElementById('reflexResult');
+  const toRevealBtn = document.getElementById('toRevealBtn');
+  let reflexState = 'idle'; // idle -> waiting -> go -> done
+  let goTime = 0;
+  let reflexTimer = null;
+
+  function startReflex(){
+    reflexState = 'waiting';
+    reflexBox.classList.remove('go');
+    reflexBox.classList.add('wait');
+    reflexBox.textContent = 'WAIT FOR IT...';
+    reflexResult.textContent = '';
+    const delay = 1200 + Math.random()*2200;
+    clearTimeout(reflexTimer);
+    reflexTimer = setTimeout(()=>{
+      reflexState = 'go';
+      goTime = Date.now();
+      reflexBox.classList.remove('wait');
+      reflexBox.classList.add('go');
+      reflexBox.textContent = 'TAP NOW!';
+    }, delay);
+  }
+
+  reflexBox.addEventListener('click', ()=>{
+    if(reflexState === 'waiting'){
+      clearTimeout(reflexTimer);
+      reflexResult.textContent = "Too early! Resetting...";
+      startReflex();
+      return;
+    }
+    if(reflexState === 'go'){
+      const rt = Date.now() - goTime;
+      reflexState = 'done';
+      let pts = rt < 300 ? 50 : rt < 600 ? 35 : 20;
+      addScore(pts);
+      reflexBox.textContent = `${rt}ms — nice reflexes!`;
+      reflexResult.textContent = `+${pts} points`;
+      toRevealBtn.classList.add('show');
+    }
+  });
+
+  toRevealBtn.addEventListener('click', ()=>{
+    document.querySelectorAll('.card').forEach(c=>c.classList.remove('active'));
+    document.getElementById('reveal').classList.add('show');
+    document.getElementById('reveal').scrollIntoView({behavior:'smooth', block:'center'});
+  });
+
+  // start reflex game when stage4 becomes active
+  const stage4Observer = new MutationObserver(()=>{
+    if(document.getElementById('stage4').classList.contains('active') && reflexState === 'idle'){
+      startReflex();
+    }
+  });
+  stage4Observer.observe(document.getElementById('stage4'), {attributes:true, attributeFilter:['class']});
+
+  /* ---------- FINAL: yes/no ---------- */
+  const noBtn = document.getElementById('no');
+  const dodgeLines = ["No", "Nope!", "Not today", "Try again?", "Still no", "So close", "Just say yes"];
+  let dodgeCount = 0;
+  function dodgeNo(){
+    dodgeCount++;
+    const bw = noBtn.offsetWidth, bh = noBtn.offsetHeight;
+    const maxX = window.innerWidth - bw - 20;
+    const maxY = window.innerHeight - bh - 20;
+    const newX = Math.max(20, Math.min(maxX, Math.random() * window.innerWidth));
+    const newY = Math.max(80, Math.min(maxY, Math.random() * window.innerHeight));
+    noBtn.style.position = 'fixed';
+    noBtn.style.left = newX + 'px';
+    noBtn.style.top = newY + 'px';
+    noBtn.style.zIndex = 60;
+    noBtn.textContent = dodgeLines[Math.min(dodgeCount, dodgeLines.length - 1)];
+    const yesBtn = document.getElementById('yes');
+    const scale = Math.min(1 + dodgeCount * 0.05, 1.6);
+    yesBtn.style.transform = `scale(${scale})`;
+  }
+  noBtn.addEventListener('mouseenter', dodgeNo);
+  noBtn.addEventListener('click', (e)=>{ e.preventDefault(); dodgeNo(); });
+  noBtn.addEventListener('touchstart', (e)=>{ e.preventDefault(); dodgeNo(); }, {passive:false});
+
+  document.getElementById('yes').addEventListener('click', ()=>{
+    addScore(50);
+    document.getElementById('finalScoreVal').textContent = score;
+    document.getElementById('finale').classList.add('show');
+    launchConfetti();
+    startCountdown();
+  });
+
+  /* ---------- countdown to the date ---------- */
+  function startCountdown(){
+    const target = new Date('2026-07-24T00:00:00');
+    const cdDays = document.getElementById('cdDays');
+    const cdHours = document.getElementById('cdHours');
+    const cdMins = document.getElementById('cdMins');
+    const cdSecs = document.getElementById('cdSecs');
+    function pad(n){ return String(n).padStart(2,'0'); }
+    function tick(){
+      const now = new Date();
+      let diff = target - now;
+      if(diff < 0) diff = 0;
+      const days = Math.floor(diff / (1000*60*60*24));
+      const hours = Math.floor((diff / (1000*60*60)) % 24);
+      const mins = Math.floor((diff / (1000*60)) % 60);
+      const secs = Math.floor((diff / 1000) % 60);
+      cdDays.textContent = pad(days);
+      cdHours.textContent = pad(hours);
+      cdMins.textContent = pad(mins);
+      cdSecs.textContent = pad(secs);
+    }
+    tick();
+    setInterval(tick, 1000);
+  }
+
+  function launchConfetti(){
+    const colors = ['#FF6F59','#FFD35C','#7BE0B0','#6EC6E8','#7B5AE0'];
+    for(let i=0; i<140; i++){
+      const c = document.createElement('div');
+      c.className = 'confetti';
+      const size = 6 + Math.random()*8;
+      c.style.width = size + 'px';
+      c.style.height = size*0.4 + 'px';
+      c.style.left = Math.random()*100 + 'vw';
+      c.style.background = colors[Math.floor(Math.random()*colors.length)];
+      c.style.animation = `fall ${2.5 + Math.random()*2.5}s linear forwards`;
+      c.style.animationDelay = (Math.random()*1.2) + 's';
+      document.body.appendChild(c);
+      setTimeout(()=>c.remove(), 6000);
+    }
+  }
+</script>
+
+</body>
+</html>
